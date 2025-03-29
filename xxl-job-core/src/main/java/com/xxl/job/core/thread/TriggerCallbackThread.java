@@ -49,6 +49,7 @@ public class TriggerCallbackThread {
     public void start() {
 
         // valid
+        // 是否有配置admin地址
         if (XxlJobExecutor.getAdminBizList() == null) {
             logger.warn(">>>>>>>>>>> xxl-job, executor callback config fail, adminAddresses is null.");
             return;
@@ -67,11 +68,13 @@ public class TriggerCallbackThread {
                         if (callback != null) {
 
                             // callback list param
+                            // 获取回调参数
                             List<HandleCallbackParam> callbackParamList = new ArrayList<HandleCallbackParam>();
+                            // 移除队列中所有元素到callbackParamList中
                             int drainToNum = getInstance().callBackQueue.drainTo(callbackParamList);
                             callbackParamList.add(callback);
 
-                            // callback, will retry if error
+                            // callback, will retry if error 通知admin
                             if (callbackParamList!=null && callbackParamList.size()>0) {
                                 doCallback(callbackParamList);
                             }
@@ -163,8 +166,9 @@ public class TriggerCallbackThread {
     private void doCallback(List<HandleCallbackParam> callbackParamList){
         boolean callbackRet = false;
         // callback, will retry if error
+        // 获取admin地址
         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
-            try {
+            try { // 回调admin,返回执行结果
                 ReturnT<String> callbackResult = adminBiz.callback(callbackParamList);
                 if (callbackResult!=null && ReturnT.SUCCESS_CODE == callbackResult.getCode()) {
                     callbackLog(callbackParamList, "<br>----------- xxl-job job callback finish.");

@@ -60,6 +60,7 @@ public class JobThread extends Thread{
      */
 	public ReturnT<String> pushTriggerQueue(TriggerParam triggerParam) {
 		// avoid repeat
+		// 若包含，则说明重复执行
 		if (triggerLogIdSet.contains(triggerParam.getLogId())) {
 			logger.info(">>>>>>>>>>> repeate trigger job, logId:{}", triggerParam.getLogId());
 			return new ReturnT<String>(ReturnT.FAIL_CODE, "repeate trigger job, logId:" + triggerParam.getLogId());
@@ -98,6 +99,7 @@ public class JobThread extends Thread{
 
     	// init
     	try {
+			// 执行初始化任务
 			handler.init();
 		} catch (Throwable e) {
     		logger.error(e.getMessage(), e);
@@ -106,18 +108,23 @@ public class JobThread extends Thread{
 		// execute
 		while(!toStop){
 			running = false;
+			// 统计空闲执行次数
 			idleTimes++;
 
             TriggerParam triggerParam = null;
             try {
 				// to check toStop signal, we need cycle, so wo cannot use queue.take(), instand of poll(timeout)
+				// 获取触发器任务
 				triggerParam = triggerQueue.poll(3L, TimeUnit.SECONDS);
 				if (triggerParam!=null) {
 					running = true;
+					// 空闲次数重置
 					idleTimes = 0;
+					// 删除logId主要用来判断是否重复执行
 					triggerLogIdSet.remove(triggerParam.getLogId());
 
 					// log filename, like "logPath/yyyy-MM-dd/9999.log"
+					// 写入log文件
 					String logFileName = XxlJobFileAppender.makeLogFileName(new Date(triggerParam.getLogDateTime()), triggerParam.getLogId());
 					XxlJobContext xxlJobContext = new XxlJobContext(
 							triggerParam.getJobId(),
@@ -131,7 +138,7 @@ public class JobThread extends Thread{
 
 					// execute
 					XxlJobHelper.log("<br>----------- xxl-job job execute start -----------<br>----------- Param:" + xxlJobContext.getJobParam());
-
+					// 设置了超时就异步线程处理
 					if (triggerParam.getExecutorTimeout() > 0) {
 						// limit timeout
 						Thread futureThread = null;
@@ -149,7 +156,7 @@ public class JobThread extends Thread{
 							});
 							futureThread = new Thread(futureTask);
 							futureThread.start();
-
+							// 异步线程处理并获取返回值
 							Boolean tempResult = futureTask.get(triggerParam.getExecutorTimeout(), TimeUnit.SECONDS);
 						} catch (TimeoutException e) {
 
@@ -163,6 +170,7 @@ public class JobThread extends Thread{
 						}
 					} else {
 						// just execute
+						// 没设置超时时间，则立刻执行触发器
 						handler.execute();
 					}
 
@@ -183,7 +191,7 @@ public class JobThread extends Thread{
 					);
 
 				} else {
-					if (idleTimes > 30) {
+					if (idleTimes > 30) { // 空闲执行次数超过30次,且队列没任务,则删除并终止线程
 						if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
 							XxlJobExecutor.removeJobThread(jobId, "excutor idle times over limit.");
 						}
@@ -207,6 +215,7 @@ public class JobThread extends Thread{
                     // callback handler info
                     if (!toStop) {
                         // commonm
+						// 加入回调队列
                         TriggerCallbackThread.pushCallBack(new HandleCallbackParam(
                         		triggerParam.getLogId(),
 								triggerParam.getLogDateTime(),
@@ -231,6 +240,7 @@ public class JobThread extends Thread{
 			TriggerParam triggerParam = triggerQueue.poll();
 			if (triggerParam!=null) {
 				// is killed
+				// 加入回调队列
 				TriggerCallbackThread.pushCallBack(new HandleCallbackParam(
 						triggerParam.getLogId(),
 						triggerParam.getLogDateTime(),
@@ -242,6 +252,7 @@ public class JobThread extends Thread{
 
 		// destroy
 		try {
+			// 销毁,执行调度器设置的销毁方法
 			handler.destroy();
 		} catch (Throwable e) {
 			logger.error(e.getMessage(), e);

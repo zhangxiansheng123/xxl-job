@@ -85,6 +85,7 @@ public class XxlJobScheduler  {
         }
 
         // load-cache
+        // 从缓冲中通过地址获取ExecutorBiz
         address = address.trim();
         ExecutorBiz executorBiz = executorBizRepository.get(address);
         if (executorBiz != null) {
@@ -92,10 +93,12 @@ public class XxlJobScheduler  {
         }
 
         // set-cache
+        // 找不到就新建
         executorBiz = new ExecutorBizClient(address,
                 XxlJobAdminConfig.getAdminConfig().getAccessToken(),
                 XxlJobAdminConfig.getAdminConfig().getTimeout());
 
+        // 添加缓存
         executorBizRepository.put(address, executorBiz);
         return executorBiz;
     }

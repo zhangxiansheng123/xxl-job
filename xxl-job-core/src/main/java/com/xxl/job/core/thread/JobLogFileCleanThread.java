@@ -30,20 +30,24 @@ public class JobLogFileCleanThread {
     public void start(final long logRetentionDays){
 
         // limit min value
+        // 日志最大保存天数<3天,直接退出
         if (logRetentionDays < 3 ) {
             return;
         }
 
+        // 一天执行一次
         localThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (!toStop) {
                     try {
                         // clean log dir, over logRetentionDays
+                        // 查询目录下所有子文件(包含目录)
                         File[] childDirs = new File(XxlJobFileAppender.getLogPath()).listFiles();
                         if (childDirs!=null && childDirs.length>0) {
 
                             // today
+                            // 获取今天0点时间
                             Calendar todayCal = Calendar.getInstance();
                             todayCal.set(Calendar.HOUR_OF_DAY,0);
                             todayCal.set(Calendar.MINUTE,0);
@@ -55,6 +59,7 @@ public class JobLogFileCleanThread {
                             for (File childFile: childDirs) {
 
                                 // valid
+                                // 不是目录跳过
                                 if (!childFile.isDirectory()) {
                                     continue;
                                 }
@@ -63,6 +68,7 @@ public class JobLogFileCleanThread {
                                 }
 
                                 // file create date
+                                // 获取文件创建时间,文件都是以年-月-日命名的
                                 Date logFileCreateDate = null;
                                 try {
                                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -73,8 +79,9 @@ public class JobLogFileCleanThread {
                                 if (logFileCreateDate == null) {
                                     continue;
                                 }
-
+                                // 大于日志最大存活时间则清除
                                 if ((todayDate.getTime()-logFileCreateDate.getTime()) >= logRetentionDays * (24 * 60 * 60 * 1000) ) {
+                                    // 超过保存天数则清除日志
                                     FileUtil.deleteRecursively(childFile);
                                 }
 
@@ -89,6 +96,7 @@ public class JobLogFileCleanThread {
                     }
 
                     try {
+                        // 睡眠一天处理
                         TimeUnit.DAYS.sleep(1);
                     } catch (Throwable e) {
                         if (!toStop) {

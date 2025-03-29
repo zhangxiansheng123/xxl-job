@@ -26,10 +26,12 @@ public class ExecutorRegistryThread {
     public void start(final String appname, final String address){
 
         // valid
+        // appname不允许为null
         if (appname==null || appname.trim().length()==0) {
             logger.warn(">>>>>>>>>>> xxl-job, executor registry config fail, appname is null.");
             return;
         }
+        // 服务端地址不能为null
         if (XxlJobExecutor.getAdminBizList() == null) {
             logger.warn(">>>>>>>>>>> xxl-job, executor registry config fail, adminAddresses is null.");
             return;
@@ -45,6 +47,7 @@ public class ExecutorRegistryThread {
                         RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
                         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
                             try {
+                                // 向server注册服务(http请求),注册内容appname,当前服务监听地址
                                 ReturnT<String> registryResult = adminBiz.registry(registryParam);
                                 if (registryResult!=null && ReturnT.SUCCESS_CODE == registryResult.getCode()) {
                                     registryResult = ReturnT.SUCCESS;
@@ -67,6 +70,7 @@ public class ExecutorRegistryThread {
 
                     try {
                         if (!toStop) {
+                            // 心跳时间30秒
                             TimeUnit.SECONDS.sleep(RegistryConfig.BEAT_TIMEOUT);
                         }
                     } catch (Throwable e) {
@@ -77,6 +81,7 @@ public class ExecutorRegistryThread {
                 }
 
                 // registry remove
+                // 删除注册
                 try {
                     RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
                     for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {

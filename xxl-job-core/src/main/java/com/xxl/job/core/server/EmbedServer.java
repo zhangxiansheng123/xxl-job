@@ -77,11 +77,13 @@ public class EmbedServer {
                             .childOption(ChannelOption.SO_KEEPALIVE, true);
 
                     // bind
+                    // 异步绑定port上
                     ChannelFuture future = bootstrap.bind(port).sync();
 
                     logger.info(">>>>>>>>>>> xxl-job remoting server start success, nettype = {}, port = {}", EmbedServer.class, port);
 
                     // start registry
+                    // 注册
                     startRegistry(appname, address);
 
                     // wait util stop
@@ -144,9 +146,12 @@ public class EmbedServer {
         protected void channelRead0(final ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
             // request parse
             //final byte[] requestBytes = ByteBufUtil.getBytes(msg.content());    // byteBuf.toString(io.netty.util.CharsetUtil.UTF_8);
-            String requestData = msg.content().toString(CharsetUtil.UTF_8);
+            String requestData = msg.content().toString(CharsetUtil.UTF_8); //解析请求数据
+            // 获取uri,后面通过uri来处理不同的请求
             String uri = msg.uri();
+            // 获取请求方式,Post/Get
             HttpMethod httpMethod = msg.method();
+            // 保持长连接
             boolean keepAlive = HttpUtil.isKeepAlive(msg);
             String accessTokenReq = msg.headers().get(XxlJobRemotingUtil.XXL_JOB_ACCESS_TOKEN);
 
@@ -155,9 +160,11 @@ public class EmbedServer {
                 @Override
                 public void run() {
                     // do invoke
+                    // 执行触发器
                     Object responseObj = process(httpMethod, uri, requestData, accessTokenReq);
 
                     // to json
+                    // 响应结果转json
                     String responseJson = GsonTool.toJson(responseObj);
 
                     // write response
@@ -168,12 +175,14 @@ public class EmbedServer {
 
         private Object process(HttpMethod httpMethod, String uri, String requestData, String accessTokenReq) {
             // valid
+            // 不是POST直接返回异常
             if (HttpMethod.POST != httpMethod) {
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, HttpMethod not support.");
             }
-            if (uri == null || uri.trim().length() == 0) {
+            if (uri == null || uri.trim().length() == 0) { // 校验uri
                 return new ReturnT<String>(ReturnT.FAIL_CODE, "invalid request, uri-mapping empty.");
             }
+            // 校验token是否正确
             if (accessToken != null
                     && accessToken.trim().length() > 0
                     && !accessToken.equals(accessTokenReq)) {
@@ -188,7 +197,7 @@ public class EmbedServer {
                     case "/idleBeat":
                         IdleBeatParam idleBeatParam = GsonTool.fromJson(requestData, IdleBeatParam.class);
                         return executorBiz.idleBeat(idleBeatParam);
-                    case "/run":
+                    case "/run":  //执行触发器
                         TriggerParam triggerParam = GsonTool.fromJson(requestData, TriggerParam.class);
                         return executorBiz.run(triggerParam);
                     case "/kill":

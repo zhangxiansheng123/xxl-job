@@ -54,10 +54,10 @@ public class JobApiController {
         }
 
         // services mapping
-        if ("callback".equals(uri)) {
+        if ("callback".equals(uri)) { // 客户端执行触发器回调
             List<HandleCallbackParam> callbackParamList = GsonTool.fromJson(data, List.class, HandleCallbackParam.class);
             return adminBiz.callback(callbackParamList);
-        } else if ("registry".equals(uri)) {
+        } else if ("registry".equals(uri)) { // 注册服务
             RegistryParam registryParam = GsonTool.fromJson(data, RegistryParam.class);
             return adminBiz.registry(registryParam);
         } else if ("registryRemove".equals(uri)) {

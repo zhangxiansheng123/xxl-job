@@ -107,6 +107,7 @@ public class JobTriggerPoolHelper {
 
                 try {
                     // do trigger
+                    // 执行触发器
                     XxlJobTrigger.trigger(jobId, triggerType, failRetryCount, executorShardingParam, executorParam, addressList);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
