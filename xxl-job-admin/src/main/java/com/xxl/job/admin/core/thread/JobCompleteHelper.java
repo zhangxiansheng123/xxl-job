@@ -35,6 +35,7 @@ public class JobCompleteHelper {
 	public void start(){
 
 		// for callback
+		// 针对回调函数处理的线程池
 		callbackThreadPool = new ThreadPoolExecutor(
 				2,
 				20,
