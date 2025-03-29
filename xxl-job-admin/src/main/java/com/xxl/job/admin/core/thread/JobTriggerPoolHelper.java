@@ -25,6 +25,7 @@ public class JobTriggerPoolHelper {
     private ThreadPoolExecutor slowTriggerPool = null;
 
     public void start(){
+        // 最大线程数200,最多处理2000任务
         fastTriggerPool = new ThreadPoolExecutor(
                 10,
                 XxlJobAdminConfig.getAdminConfig().getTriggerPoolFastMax(),
@@ -44,6 +45,7 @@ public class JobTriggerPoolHelper {
                     }
                 });
 
+        // 最大线程数100, 最多处理5000任务
         slowTriggerPool = new ThreadPoolExecutor(
                 10,
                 XxlJobAdminConfig.getAdminConfig().getTriggerPoolSlowMax(),
@@ -91,6 +93,7 @@ public class JobTriggerPoolHelper {
         // choose thread pool
         ThreadPoolExecutor triggerPool_ = fastTriggerPool;
         AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobId);
+        // 一分钟超过10次执行时间超过500ms则放慢线程池执行
         if (jobTimeoutCount!=null && jobTimeoutCount.get() > 10) {      // job-timeout 10 times in 1 min
             triggerPool_ = slowTriggerPool;
         }
