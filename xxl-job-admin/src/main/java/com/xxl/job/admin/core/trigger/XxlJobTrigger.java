@@ -157,7 +157,8 @@ public class XxlJobTrigger {
         String address = null;
         ReturnT<String> routeAddressResult = null;
         if (group.getRegistryList()!=null && !group.getRegistryList().isEmpty()) {
-            if (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) { //如果是集群广播模式
+            if (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) { //如果是分片广播模式
+                // 通过遍历每个索引获取客户端地址访问
                 if (index < group.getRegistryList().size()) { // 查询匹配地址执行
                     address = group.getRegistryList().get(index);
                 } else { // 超过size,则默认执行第一个.

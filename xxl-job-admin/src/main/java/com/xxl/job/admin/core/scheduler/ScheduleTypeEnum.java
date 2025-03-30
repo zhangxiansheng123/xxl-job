@@ -7,16 +7,19 @@ import com.xxl.job.admin.core.util.I18nUtil;
  */
 public enum ScheduleTypeEnum {
 
+    // 该类型不会主动触发调度；
     NONE(I18nUtil.getString("schedule_type_none")),
 
     /**
      * schedule by cron
      */
+    // 该类型将会通过CRON，触发任务调度；
     CRON(I18nUtil.getString("schedule_type_cron")),
 
     /**
      * schedule by fixed rate (in seconds)
      */
+    // 固定速度：该类型将会以固定速度，触发任务调度；按照固定的间隔时间，周期性触发；
     FIX_RATE(I18nUtil.getString("schedule_type_fix_rate")),
 
     /**

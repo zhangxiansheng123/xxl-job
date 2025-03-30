@@ -61,18 +61,26 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
         // ------A1------A2-------A3------
         // -----------J1------------------
         TreeMap<Long, String> addressRing = new TreeMap<Long, String>();
+        // 遍历每一个节点
         for (String address: addressList) {
+            // 引入虚拟节点，通过将ip地址后面添加100个编号计算出不同的hash值，存储在hash环中。
             for (int i = 0; i < VIRTUAL_NODE_NUM; i++) {
+                // 通过md5算出hash值
                 long addressHash = hash("SHARD-" + address + "-NODE-" + i);
+                // 存储二叉树中
                 addressRing.put(addressHash, address);
             }
         }
 
+        // 计算key的hash值
         long jobHash = hash(String.valueOf(jobId));
+        // 根据给定的键（fromKey）返回一个SortedMap，这个映射包含了原TreeMap中所有键大于或等于fromKey的键值对。
         SortedMap<Long, String> lastRing = addressRing.tailMap(jobHash);
         if (!lastRing.isEmpty()) {
+            // 不为空则返回临近的第一个节点。
             return lastRing.get(lastRing.firstKey());
         }
+        // 没找到则返回第一个元素
         return addressRing.firstEntry().getValue();
     }
 

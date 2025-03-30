@@ -387,13 +387,18 @@ public class JobScheduleHelper {
 
     // ---------------------- tools ----------------------
     public static Date generateNextValidTime(XxlJobInfo jobInfo, Date fromTime) throws Exception {
+        // 匹配调度类型
         ScheduleTypeEnum scheduleTypeEnum = ScheduleTypeEnum.match(jobInfo.getScheduleType(), null);
         if (ScheduleTypeEnum.CRON == scheduleTypeEnum) {
+            // 通过CRON，触发任务调度；
+            // 通过cron表达式,获取下一次执行时间
             Date nextValidTime = new CronExpression(jobInfo.getScheduleConf()).getNextValidTimeAfter(fromTime);
             return nextValidTime;
         } else if (ScheduleTypeEnum.FIX_RATE == scheduleTypeEnum /*|| ScheduleTypeEnum.FIX_DELAY == scheduleTypeEnum*/) {
+            // 以固定速度，触发任务调度；按照固定的间隔时间，周期性触发；
             return new Date(fromTime.getTime() + Integer.valueOf(jobInfo.getScheduleConf())*1000 );
         }
+        // 没有匹配到调度类型,则null
         return null;
     }
 

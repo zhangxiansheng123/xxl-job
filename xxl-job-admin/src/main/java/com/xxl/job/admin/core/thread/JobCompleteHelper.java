@@ -87,6 +87,7 @@ public class JobCompleteHelper {
 								jobLog.setId(logId);
 
 								jobLog.setHandleTime(new Date());
+								// 超过十分钟设置成失败code
 								jobLog.setHandleCode(ReturnT.FAIL_CODE);
 								jobLog.setHandleMsg( I18nUtil.getString("joblog_lost_fail") );
 
